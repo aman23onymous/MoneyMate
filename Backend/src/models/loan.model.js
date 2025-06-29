@@ -14,3 +14,4 @@ const loanSchema = new mongoose.Schema({
 
 const Loan = mongoose.model("Loan", loanSchema);
 export default Loan;
+3
