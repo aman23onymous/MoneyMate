@@ -3,6 +3,7 @@ import Otp from "../models/otp.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "../lib/sendEmail.js";
+import Account from "../models/account.model.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
@@ -87,18 +88,24 @@ export const registerUser = async (req, res) => {
 
     await otpDoc.deleteOne();
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
+    // After OTP verified for registration
+const token = jwt.sign(
+  { userId: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: "30m" }
+);
 
-    res.status(200).json({
-      message: "User registered successfully",
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone
-      }
-    });
+res.status(200).json({
+  message: "User registered successfully",
+  token,
+  user: {
+    id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone
+  }
+});
+
   } catch (err) {
     res.status(500).json({ message: "OTP verification failed", error: err.message });
   }
@@ -122,19 +129,45 @@ export const loginUser = async (req, res) => {
 
     await otpDoc.deleteOne();
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign(
+  { userId: user._id },
+  process.env.JWT_SECRET,
+  { expiresIn: "30m" }
+);
 
-    res.status(200).json({
-      message: "User logged in successfully",
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone
-      }
-    });
+res.status(200).json({
+  message: "User logged in successfully",
+  token,
+  user: {
+    id: user._id,
+    fullName: user.fullName,
+    email: user.email,
+    phone: user.phone
+  }
+});
   } catch (err) {
     res.status(500).json({ message: "Login OTP verification failed", error: err.message });
+  }
+};
+
+
+// Account details for the user
+export const getMe = async (req, res) => {
+  try {
+    // Get user profile (excluding password)
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get all accounts for the user
+    const accounts = await Account.find({ user: req.userId });
+
+    res.status(200).json({
+      user,
+      accounts
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch profile", error: error.message });
   }
 };
