@@ -1,5 +1,4 @@
 import Account from "../models/account.model.js";
-import jwt from "jsonwebtoken";
 
 const generateAccountNumber = (accountType) => {
     if(accountType === "savings"){

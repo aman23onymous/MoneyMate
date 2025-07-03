@@ -4,6 +4,7 @@ import userRoutes from "./src/routes/user.route.js";
 import connectDB from "./src/lib/db.js"
 import paymentRoute from "./src/routes/payment.route.js"
 import accountRoutes from "./src/routes/account.route.js";
+import transactionRoutes from "./src/routes/transaction.route.js";
 const app=express()
 
 import 'dotenv/config'
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/payment",paymentRoute);
 app.use("/api/account", accountRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/transaction", transactionRoutes);
 app.listen(PORT, () => {
   console.log(`✅ App listening at: http://localhost:${PORT}`)
   connectDB();

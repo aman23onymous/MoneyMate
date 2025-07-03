@@ -9,11 +9,13 @@ const transactionSchema = new mongoose.Schema(
     },
     fromAccount: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Account"
+      ref: "Account",
+      required: true
     },
     toAccount: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Account"
+      ref: "Account",
+      required: true
     },
     amount: {
       type: Number,
@@ -23,12 +25,12 @@ const transactionSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ["deposit", "withdrawal", "transfer"],
-      required: true
+      default: "transfer"
     },
     category: {
       type: String,
       enum: ["UPI", "NEFT", "IMPS","RTGS"],
-      default: "success"
+      default: "IMPS"
     },
     description: {
       type: String
@@ -36,7 +38,11 @@ const transactionSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["success", "pending", "failed"],
-      default: "success"
+      default: "pending"
+    },
+    otp: {
+      type: String,
+      required: true
     },
     timestamp: {
       type: Date,
