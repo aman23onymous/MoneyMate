@@ -2,10 +2,12 @@ import React from "react";
 import axios from "axios";
 const Raztemp = () => {
     const amount= 1200;
+    const accountType="savings"
   const paymentHandle = async() => {
     const {data:keyData}= await axios.get("http://localhost:8080/api/v1/payment/key");
     const {data:orderData}=await axios.post("http://localhost:8080/api/v1/payment/processPayment",{
-        amount
+        amount,
+        accountType,
     })
     const {key}=keyData;
     const {order}=orderData;
@@ -19,7 +21,7 @@ const Raztemp = () => {
         name: 'Money Mate',
         description: 'Test Transaction',
         order_id: order.id, // This is the order_id created in the backend
-        callback_url: 'http://localhost:8080/api/v1/payment/paymentVerification', // Your success URL
+        callback_url: 'http://localhost:8080/api/v1/payment/paymentVeriication', // Your success URL
         prefill: {
           name: 'Gaurav Kumar',
           email: 'gaurav.kumar@example.com',
@@ -59,3 +61,5 @@ const Raztemp = () => {
 };
 
 export default Raztemp;
+
+// currently this is not working we have first store token in redux then call axios.post then it

@@ -92,7 +92,7 @@ export const registerUser = async (req, res) => {
 const token = jwt.sign(
   { userId: user._id },
   process.env.JWT_SECRET,
-  { expiresIn: "30m" }
+  { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge 
 );
 
 res.status(200).json({
@@ -132,7 +132,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
   { userId: user._id },
   process.env.JWT_SECRET,
-  { expiresIn: "30m" }
+  { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge 
 );
 
 res.status(200).json({

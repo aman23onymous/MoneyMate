@@ -92,7 +92,7 @@ export const initiateTransfer = async (req, res) => {
       message: "OTP sent to your email. Please verify to complete transaction.",
       transactionId: txn._id
     });
-  } catch (error) {
+  } catch (error) {  
     console.error(error);
     res.status(500).json({
       message: "Failed to initiate transaction",
