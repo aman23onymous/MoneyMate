@@ -161,3 +161,112 @@ export const verifyTransfer = async (req, res) => {
       .json({ message: "Failed to verify transaction", error: error.message });
   }
 };
+
+export const getTransactionHistory = async (req, res) => {
+  try {
+    // Find all accounts owned by the user
+    const userAccounts = await Account.find({ user: req.userId }).select("_id");
+    const accountIds = userAccounts.map(acc => acc._id);
+
+    // Fetch all transactions involving these accounts
+    const transactions = await Transaction.find({
+  status: "success", // ✅ only successful transactions
+  $or: [
+    { fromAccount: { $in: accountIds } },
+    { toAccount: { $in: accountIds } }
+  ]
+})
+      .sort({ createdAt: -1 }) // latest first
+      .populate("fromAccount toAccount", "accountNumber") // optional: show account numbers
+      .select("-otp -status"); // don't send OTPs back
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch transaction history", error: error.message });
+  }
+};
+
+export const completePendingTransaction = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+
+    const txn = await Transaction.findById(transactionId);
+    if (!txn || txn.status !== "pending") {
+      return res.status(404).json({ message: "Pending transaction not found" });
+    }
+
+    if (txn.user.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const newOtp = generateOTP();
+    txn.otp = newOtp;
+    await txn.save();
+
+    const user = await User.findById(req.userId);
+
+    await sendEmail(
+      user.email,
+      "MoneyMate - Resent OTP",
+      `<p>Your OTP to complete the transaction of ₹${txn.amount} is <b>${newOtp}</b>. Valid for 5 minutes.</p>`
+    );
+
+    res.status(200).json({
+      message: `A new OTP has been sent to ${user.email} for transaction of ₹${txn.amount}`,
+      transactionId: txn._id
+    });
+
+
+  } catch (err) {
+    res.status(500).json({ message: "Failed to resend OTP", error: err.message });
+  }
+};
+
+export const verifyPendingTransaction = async (transactionId, otp) => {
+  const txn = await Transaction.findById(transactionId);
+  if (!txn || txn.status !== "pending" || txn.otp !== otp) return { success: false, reason: "Invalid or expired transaction or OTP" };
+
+  const sender = await Account.findById(txn.fromAccount);
+  const receiver = await Account.findById(txn.toAccount);
+
+  if (!sender || !receiver) {
+    return { success: false, reason: "Sender or receiver account not found" };
+  }
+
+  if (sender.balance < txn.amount) {
+    txn.status = "failed";
+    await txn.save();
+    return { success: false, reason: "Insufficient balance" };
+  }
+
+  // Perform transfer
+  sender.balance -= txn.amount;
+  receiver.balance += txn.amount;
+  await sender.save();
+  await receiver.save();
+
+  txn.status = "success";
+  txn.otp = null;
+  await txn.save();
+
+  return { success: true, transaction: txn };
+};
+
+export const finalizePendingTransaction = async (req, res) => {
+  try {
+    const { transactionId, otp } = req.body;
+
+    const result = await verifyPendingTransaction(transactionId, otp);
+
+    if (!result.success) {
+      return res.status(400).json({ message: result.reason });
+    }
+
+    res.status(200).json({
+      message: "Transaction completed successfully",
+      transaction: result.transaction
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to verify transaction", error: err.message });
+  }
+};

@@ -3,12 +3,14 @@ import Otp from "../models/otp.model.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { sendEmail } from "../lib/sendEmail.js";
+import { expireOldTransactions } from "../lib/expireTransaction.js";
 import Account from "../models/account.model.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
 
 // Generate 6-digit OTP
-const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtp = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 // 🔹 Send OTP for registration
 export const sendRegisterOtp = async (req, res) => {
@@ -29,17 +31,25 @@ export const sendRegisterOtp = async (req, res) => {
       fullName,
       email,
       phone,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     const otp = generateOtp();
     await Otp.create({ user: user._id, otp, purpose: "register" });
 
-    await sendEmail(email, "Your OTP for registration", `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`);
+    await sendEmail(
+      email,
+      "Your OTP for registration",
+      `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`
+    );
 
-    res.status(200).json({ message: "OTP sent to your email for registration." });
+    res
+      .status(200)
+      .json({ message: "OTP sent to your email for registration." });
   } catch (err) {
-    res.status(500).json({ message: "Error sending register OTP", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error sending register OTP", error: err.message });
   }
 };
 
@@ -49,11 +59,12 @@ export const sendLoginOtp = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password)
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
@@ -62,11 +73,17 @@ export const sendLoginOtp = async (req, res) => {
     const otp = generateOtp();
     await Otp.create({ user: user._id, otp, purpose: "login" });
 
-    await sendEmail(email, "Your OTP for login", `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`);
+    await sendEmail(
+      email,
+      "Your OTP for login",
+      `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`
+    );
 
     res.status(200).json({ message: "OTP sent to your email for login." });
   } catch (err) {
-    res.status(500).json({ message: "Error sending login OTP", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error sending login OTP", error: err.message });
   }
 };
 
@@ -79,35 +96,41 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required." });
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
-    const otpDoc = await Otp.findOne({ user: user._id, otp, purpose: "register" });
+    const otpDoc = await Otp.findOne({
+      user: user._id,
+      otp,
+      purpose: "register",
+    });
     if (!otpDoc)
       return res.status(400).json({ message: "Invalid or expired OTP." });
 
     await otpDoc.deleteOne();
 
+    await expireOldTransactions(); // Clean up old transactions if needed
+
     // After OTP verified for registration
-const token = jwt.sign(
-  { userId: user._id },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge 
-);
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge
+    );
 
-res.status(200).json({
-  message: "User registered successfully",
-  token,
-  user: {
-    id: user._id,
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.phone
-  }
-});
-
+    res.status(200).json({
+      message: "User registered successfully",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: "OTP verification failed", error: err.message });
+    res
+      .status(500)
+      .json({ message: "OTP verification failed", error: err.message });
   }
 };
 
@@ -120,8 +143,7 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required." });
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     const otpDoc = await Otp.findOne({ user: user._id, otp, purpose: "login" });
     if (!otpDoc)
@@ -129,27 +151,31 @@ export const loginUser = async (req, res) => {
 
     await otpDoc.deleteOne();
 
-    const token = jwt.sign(
-  { userId: user._id },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge 
-);
+    await expireOldTransactions();
+console.log("✅ Checked for old transactions");
 
-res.status(200).json({
-  message: "User logged in successfully",
-  token,
-  user: {
-    id: user._id,
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.phone
-  }
-});
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" } // abhi ke liye kiya ki hume bar bar log in n karna padhe bad me change kar lenge
+    );
+
+    res.status(200).json({
+      message: "User logged in successfully",
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: "Login OTP verification failed", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Login OTP verification failed", error: err.message });
   }
 };
-
 
 // Account details for the user
 export const getMe = async (req, res) => {
@@ -165,9 +191,11 @@ export const getMe = async (req, res) => {
 
     res.status(200).json({
       user,
-      accounts
+      accounts,
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch profile", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch profile", error: error.message });
   }
 };

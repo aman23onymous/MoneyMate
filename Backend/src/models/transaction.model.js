@@ -41,9 +41,11 @@ const transactionSchema = new mongoose.Schema(
       default: "pending"
     },
     otp: {
-      type: String,
-      required: true
-    },
+  type: String,
+  required: function () {
+    return this.status === "pending"; // only required when pending
+  }
+},
     timestamp: {
       type: Date,
       default: Date.now
