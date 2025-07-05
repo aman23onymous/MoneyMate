@@ -1,21 +1,13 @@
-
 import React from 'react'
-
+import { Routes, Route } from 'react-router-dom';
+import LoginPage from './components/auth/LoginPage';
+import AuthPage from './pages/authPage'
 import Raztemp from './components/ui/raztemp'
 const App = () => {
   return (
-    <>
-      <h1 className="text-3xl font-bold text-center">
-        Make Payment
-    </h1>
-
-     <Raztemp/>
-    
-  
-    
-    
-
-    </>
+    <Routes>
+      <Route path="/" element={<AuthPage />} />
+    </Routes>
   )
 }
 
