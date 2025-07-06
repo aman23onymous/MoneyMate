@@ -15,27 +15,20 @@ const generateOtp = () =>
 // 🔹 Send OTP for registration
 export const sendRegisterOtp = async (req, res) => {
   try {
-    const { fullName, email, phone, password } = req.body;
+    const { email } = req.body;
 
-    if (!fullName || !email || !phone || !password) {
-      return res.status(400).json({ message: "All fields are required." });
+    if ( !email ) {
+      return res.status(400).json({ message: "Email required." });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "User already exists." });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      fullName,
-      email,
-      phone,
-      password: hashedPassword,
-    });
+    await Otp.deleteMany({ email, purpose: "register" });
 
     const otp = generateOtp();
-    await Otp.create({ user: user._id, otp, purpose: "register" });
+    await Otp.create({ email,otp, purpose: "register" });
 
     await sendEmail(
       email,
@@ -90,23 +83,31 @@ export const sendLoginOtp = async (req, res) => {
 // 🔹 Register user (after verifying OTP)
 export const registerUser = async (req, res) => {
   try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp)
-      return res.status(400).json({ message: "Email and OTP are required." });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
+    const { fullName,email,phone,password, otp } = req.body;
+     if (!fullName || !email || !phone || !password || !otp) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({ message: "User already exists." });
 
     const otpDoc = await Otp.findOne({
-      user: user._id,
+      email,
       otp,
       purpose: "register",
     });
-    if (!otpDoc)
-      return res.status(400).json({ message: "Invalid or expired OTP." });
-
+    if (!otpDoc){
+      return res.status(400).json({ message: "Invalid or expired OTP." })
+    }
+      
     await otpDoc.deleteOne();
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      fullName,
+      email,
+      phone,
+      password: hashedPassword,
+    });
 
     await expireOldTransactions(); // Clean up old transactions if needed
 
