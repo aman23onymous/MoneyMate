@@ -23,9 +23,20 @@ const RegisterPage = ({ setPage, setEmailForVerification }) => {
   }, [dispatch]);
   
   useEffect(() => {
-    if (message?.includes('verifiction code')) {
+    console.log("RegisterPage useEffect - Current message:", message);
+    if (message?.includes('OTP sent to your email for registration.')) {
+        console.log("RegisterPage useEffect - Message matches! Setting page to 'register_otp'.");
+        sessionStorage.setItem('partial_user', JSON.stringify({
+        fullName: formData.name, // Assuming 'name' maps to 'fullName' in your backend
+        email: formData.email,
+        password: formData.password,
+        phone: 9999999999,
+      }));
         setPage('register_otp');
         dispatch(clearState());
+    }
+    else if(message){
+      console.log("RegisterPage useEffect - Message exists but does not match expected string:", message);
     }
   }, [message, setPage, dispatch]);
 
