@@ -2,6 +2,7 @@ import { useState } from 'react';
 import LoginPage from '../components/auth/LoginPage';
 import RegisterPage from '../components/auth/RegisterPage';
 import VerifyEmailPage from '../components/auth/VerifyEmailPage';
+import VerifyLoginPage from '../components/auth/VerifyLoginPage';
 //import ForgotPasswordPage from '../components/auth/ForgotPasswordPage';
 //import ResetPasswordPage from '../components/auth/ResetPasswordPage';
 
@@ -15,6 +16,8 @@ const AuthPage = () => {
     switch (page) {
       case 'login':
         return <LoginPage setPage={setPage} />;
+      case 'login_otp':
+        return <VerifyLoginPage setPage={setPage} email={emailForVerification} />;
       case 'register':
         return <RegisterPage setPage={setPage} setEmailForVerification={setEmailForVerification} />;
       case 'register_otp':
