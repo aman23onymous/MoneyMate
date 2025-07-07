@@ -38,19 +38,18 @@ export const sendRegisterOtp = async (req, res) => {
 
     res
       .status(200)
-      .json({ message: "OTP sent to your email for registration." });
+      .json({ success: true,message: "OTP sent to your email for registration." });
   } catch (err) {
     res
       .status(500)
-      .json({ message: "Error sending register OTP", error: err.message });
+      .json({ success: false,message: "Error sending register OTP", error: err.message });
   }
 };
 
-// 🔹 Send OTP for login (after verifying password)
 export const sendLoginOtp = async (req, res) => {
   try {
     const { email, password } = req.body;
-
+    console.log("Received login request for:", email);
     if (!email || !password)
       return res
         .status(400)
@@ -64,7 +63,7 @@ export const sendLoginOtp = async (req, res) => {
       return res.status(401).json({ message: "Incorrect password." });
 
     const otp = generateOtp();
-    await Otp.create({ user: user._id, otp, purpose: "login" });
+    await Otp.create({ email, otp, purpose: "login" });
 
     await sendEmail(
       email,
@@ -72,11 +71,11 @@ export const sendLoginOtp = async (req, res) => {
       `<p>Your OTP is <b>${otp}</b>. It is valid for 5 minutes.</p>`
     );
 
-    res.status(200).json({ message: "OTP sent to your email for login." });
+    res.status(200).json({ success:true,message: "OTP sent to your email for login." });
   } catch (err) {
     res
       .status(500)
-      .json({ message: "Error sending login OTP", error: err.message });
+      .json({ success:false,message: "Error sending login OTP", error: err.message });
   }
 };
 
@@ -146,7 +145,7 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    const otpDoc = await Otp.findOne({ user: user._id, otp, purpose: "login" });
+    const otpDoc = await Otp.findOne({ email, otp, purpose: "login" });
     if (!otpDoc)
       return res.status(400).json({ message: "Invalid or expired OTP." });
 
