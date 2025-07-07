@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Fingerprint, Loader2 } from 'lucide-react';
 import AuthCard from './AuthCard';
-import { login, clearState } from '../../features/auth/authSlice'; // Adjust path
+import { sendLoginOTP, clearState } from '../../features/auth/authSlice'; // Adjust path
 
 const LoginPage = ({ setPage }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { isLoading, error } = useSelector((state) => state.auth);
+  const { isLoading, message, error } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [validationMsg, setValidationMsg] = useState({ email: '', password: '' });
@@ -20,8 +20,18 @@ const LoginPage = ({ setPage }) => {
   const loginValidated = formData.email && formData.password && !validationMsg.email && !validationMsg.password;
 
   useEffect(() => {
-    dispatch(clearState()); // Clear any previous errors when component mounts
-  }, [dispatch]);
+    // Check for the specific success message from your backend
+    if (message?.includes('OTP sent to your email for login.')) {
+      // Store form data to use on the next page
+      sessionStorage.setItem('login_user_credentials', JSON.stringify(formData));
+      // Switch to the OTP verification page
+      console.log("LoginPage: Stored in sessionStorage:", JSON.parse(sessionStorage.getItem('login_user_credentials')));
+      console.log("LoginPage: formData email:", formData.email);
+      setPage('login_otp');
+      // Clear the message so this doesn't run again
+      dispatch(clearState());
+    }
+  }, [message, dispatch, navigate, formData, setPage]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -46,9 +56,9 @@ const LoginPage = ({ setPage }) => {
     }
   };
 
-  const handleLogin = () => {
+  const handleSendOtp = () => {
     if (!loginValidated) return;
-    dispatch(login({ userData: formData, navigate }));
+    dispatch(sendLoginOTP(formData)); // Dispatch the new action
   };
 
   return (
@@ -66,7 +76,7 @@ const LoginPage = ({ setPage }) => {
       <p onClick={() => setPage('forget_password_email')} className="text-sm text-blue-600 cursor-pointer hover:underline text-right mt-2">
         Forgot Password?
       </p>
-      <Button onClick={handleLogin} disabled={isLoading || !loginValidated} className="w-full mt-6 bg-black text-white hover:bg-gray-800">
+      <Button onClick={handleSendOtp} disabled={isLoading || !loginValidated} className="w-full mt-6 bg-black text-white hover:bg-gray-800">
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Log in'}
       </Button>
       <Button variant="outline" disabled={isLoading} className="w-full mt-2">
