@@ -24,6 +24,7 @@ const VerifyEmailPage = ({ setPage, email }) => {
     // For this example, let's assume we need to pass the full original form data again.
     // A better approach would be to store the partial user data in redux state.
     const userData = { ...JSON.parse(sessionStorage.getItem('partial_user')), otp };
+    console.log(userData);
     dispatch(register({ userData, navigate }));
   };
 

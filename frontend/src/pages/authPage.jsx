@@ -12,7 +12,8 @@ const AuthPage = () => {
   // This state is lifted up to pass the email between components.
   const [emailForVerification, setEmailForVerification] = useState('');
 
-  const renderContent = () => {
+  const renderContent = () => {  //In React, you often switch between components based on some state. 
+     //Instead of writing conditional JSX directly inside the return block (which can get messy), this function handles that logic cleanly and separately.
     switch (page) {
       case 'login':
         return <LoginPage setPage={setPage} />;

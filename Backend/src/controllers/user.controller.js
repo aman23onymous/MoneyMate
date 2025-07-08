@@ -82,8 +82,10 @@ export const sendLoginOtp = async (req, res) => {
 // 🔹 Register user (after verifying OTP)
 export const registerUser = async (req, res) => {
   try {
+    console.log(req.body);
     const { fullName,email,phone,password, otp } = req.body;
      if (!fullName || !email || !phone || !password || !otp) {
+       
       return res.status(400).json({ message: "All fields are required." });
     }
     const existingUser = await User.findOne({ email });
@@ -96,6 +98,7 @@ export const registerUser = async (req, res) => {
       purpose: "register",
     });
     if (!otpDoc){
+      console.log("otp not verified !")
       return res.status(400).json({ message: "Invalid or expired OTP." })
     }
       
@@ -128,6 +131,7 @@ export const registerUser = async (req, res) => {
       },
     });
   } catch (err) {
+   console.error("Registration error:", err); // real error
     res
       .status(500)
       .json({ message: "OTP verification failed", error: err.message });

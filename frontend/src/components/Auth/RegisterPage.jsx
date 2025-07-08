@@ -30,7 +30,7 @@ const RegisterPage = ({ setPage, setEmailForVerification }) => {
         fullName: formData.name, // Assuming 'name' maps to 'fullName' in your backend
         email: formData.email,
         password: formData.password,
-        phone: 9999999999,
+        phone: "9999999999",
       }));
         setPage('register_otp');
         dispatch(clearState());
