@@ -77,6 +77,7 @@ export const login = createAsyncThunk(
   async ({ userData, navigate }, { rejectWithValue }) => {
     try {
       const { data } = await api.login(userData);
+       console.log("Login response:", data);
       if (data.success) {
         navigate('/'); // Perform navigation on success
         return data;

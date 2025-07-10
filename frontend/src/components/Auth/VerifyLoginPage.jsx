@@ -24,7 +24,7 @@ const VerifyLoginPage = ({ setPage }) => {
   }, [dispatch]);
 
   // This function is called when the user submits the OTP
-  const handleVerifyAndLogin = () => {
+  const handleVerifyAndLogin = async () => {
     // Ensure OTP and credentials exist before dispatching
     if (!otp || !userCredentials) {
         console.error("OTP or user credentials not found.");
@@ -33,9 +33,12 @@ const VerifyLoginPage = ({ setPage }) => {
     
     // Combine the stored credentials (email, password) with the new OTP
     const userData = { ...userCredentials, otp };
+    console.log("line 36")
     
+
     // Dispatch the final login action
-    dispatch(login({ userData, navigate }));
+     const result= await  dispatch(login({ userData,navigate}));
+     
   };
 
   // This function is called when the user clicks "Resend"

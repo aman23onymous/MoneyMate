@@ -121,6 +121,7 @@ export const registerUser = async (req, res) => {
     );
 
     res.status(200).json({
+      success: true,
       message: "User registered successfully",
       token,
       user: {
@@ -165,6 +166,7 @@ console.log("✅ Checked for old transactions");
     );
 
     res.status(200).json({
+      success: true,
       message: "User logged in successfully",
       token,
       user: {
@@ -194,6 +196,7 @@ export const getMe = async (req, res) => {
     const accounts = await Account.find({ user: req.userId });
 
     res.status(200).json({
+      success: true,
       user,
       accounts,
     });
