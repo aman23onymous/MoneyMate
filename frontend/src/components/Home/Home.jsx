@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Sidebar from '../layout/Sidebar'
 import Header from '../layout/Header';
 import Dashboard from '../Dashboard/Dashboard';
-
+import FloatingChatIcon from '../Bot/FloatingChatIcon';
 const HomePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -16,6 +16,7 @@ const HomePage = () => {
         <Header setIsSidebarOpen={setIsSidebarOpen} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
           <Dashboard />
+          <FloatingChatIcon/>
         </main>
       </div>
     </div>
