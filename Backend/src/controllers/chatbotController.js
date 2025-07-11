@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Read credentials JSON manually (sync or async both work)
-const credentialsPath = path.join(__dirname, "../../moneymate-cuxs-33f6e2f6a771.json");
+const credentialsPath = path.join(__dirname, "../../chatbot.json");
 const CREDENTIALS = JSON.parse(fs.readFileSync(credentialsPath, "utf-8"));
 
 const PROJECT_ID = CREDENTIALS.project_id;
