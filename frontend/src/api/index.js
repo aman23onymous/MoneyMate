@@ -34,6 +34,13 @@ export const sendForgetPasswordOTP = (email) => API.post('/api/users/send-forget
 
 export const changePassword = (userData) => API.post('/api/users/change-password', userData);
 
+export const getAccounts = () => API.get('/api/account/getAccounts');
+
+export const createAccount = (accountData) => API.post('/api/account/create', accountData);
+
+export const getFixedDeposits = () => API.get('/api/account/fd');
+
+export const createFixedDeposit = (fdData) => API.post('/api/account/fd/create', fdData);
 // You can add other API calls for your application here
 // export const fetchPosts = () => API.get('/posts');
 // export const createPost = (newPost) => API.post('/posts', newPost);

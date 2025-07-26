@@ -11,7 +11,11 @@ const App = () => {
   return (
     <Routes>
       <Route path="/auth" element={!isAuthenticated?<AuthPage/>:<Navigate to="/"/>} />
-      <Route  path="/" element={isAuthenticated?<HomePage/>:<Navigate to="/auth"/>}/>
+      
+      <Route  path="/*" element={isAuthenticated ? <HomePage /> : <Navigate to="/auth" />}/>
+       
+        
+    
     </Routes>
   )
 }

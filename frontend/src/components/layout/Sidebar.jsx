@@ -1,3 +1,5 @@
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Home,
   Wallet,
@@ -11,20 +13,21 @@ import {
 } from 'lucide-react';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+  const location = useLocation();
+
   const navItems = [
-    { icon: Home, label: 'Home' },
-    { icon: Wallet, label: 'Accounts' },
-    { icon: ArrowRightLeft, label: 'Transfer' },
-    { icon: Receipt, label: 'Bill Payments' },
-    { icon: History, label: 'Transactions' },
-    { icon: Landmark, label: 'Fixed Deposit' },
-    { icon: ShieldCheck, label: 'Loans' },
-    { icon: FileText, label: 'Report' },
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: Wallet, label: 'Accounts', path: '/accounts' },
+    { icon: ArrowRightLeft, label: 'Transfer', path: '/transfer' },
+    { icon: Receipt, label: 'Bill Payments', path: '/bill-payments' },
+    { icon: History, label: 'Transactions', path: '/transactions' },
+    { icon: Landmark, label: 'Fixed Deposit', path: '/fixed-deposit' },
+    { icon: ShieldCheck, label: 'Loans', path: '/loans' },
+    { icon: FileText, label: 'Report', path: '/report' },
   ];
 
   return (
     <>
-      {/* Overlay for mobile */}
       <div
         className={`fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity lg:hidden ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -32,13 +35,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         onClick={() => setIsSidebarOpen(false)}
       />
 
-      {/* Sidebar panel */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 lg:relative lg:translate-x-0 lg:w-60 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Top logo & close button */}
         <div className="flex items-center justify-between p-4 h-16 border-b">
           <h1 className="text-2xl font-bold">LOGO</h1>
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
@@ -46,24 +47,27 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           </button>
         </div>
 
-        {/* Navigation list */}
         <nav className="p-4">
           <ul className="space-y-1">
-            {navItems.map((item, index) => (
-              <li key={index}>
-                <a
-                  href="#"
-                  className={`flex items-center p-3 rounded-lg transition-colors ${
-                    item.label === 'Home'
-                      ? 'bg-gray-100 font-semibold'
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 mr-3" />
-                  <span>{item.label}</span>
-                </a>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <li key={item.label}>
+                  <Link
+                    to={item.path}
+                    onClick={() => setIsSidebarOpen(false)}
+                    className={`flex items-center p-3 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-gray-100 font-semibold text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5 mr-3" />
+                    <span>{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>
@@ -72,4 +76,3 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 };
 
 export default Sidebar;
-

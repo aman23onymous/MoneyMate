@@ -45,3 +45,14 @@ export const createAccount = async (req, res) => {
     res.status(500).json({ message: "Failed to create account", error: error.message });
   }
 };
+
+export const getAccounts= async(req,res)=>{
+    try{
+       const accounts= await Account.find({user:req.userId});
+        res.status(200).json(accounts);
+    }
+    catch(error){
+        console.log(`error in getAccounts ${error}`);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
