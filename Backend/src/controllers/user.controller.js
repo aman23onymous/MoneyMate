@@ -82,7 +82,7 @@ export const sendLoginOtp = async (req, res) => {
 // 🔹 Register user (after verifying OTP)
 export const registerUser = async (req, res) => {
   try {
-    console.log(req.body);
+    //console.log(req.body);
     const { fullName,email,phone,password, otp } = req.body;
      if (!fullName || !email || !phone || !password || !otp) {
        
