@@ -11,6 +11,7 @@ import {
   FileText,
   X,
 } from 'lucide-react';
+import logo from '../../assets/Logo.png'; 
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const location = useLocation();
@@ -40,13 +41,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between p-4 h-16 border-b">
-          <h1 className="text-2xl font-bold">LOGO</h1>
+        <div className="flex items-center justify-between p-4 h-32 border-b lg:justify-center">
+          <img src={logo} alt="MoneyMate Logo" className="h-28 w-auto" />
           <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden">
             <X className="h-6 w-6" />
           </button>
         </div>
-
+        
         <nav className="p-4">
           <ul className="space-y-1">
             {navItems.map((item) => {

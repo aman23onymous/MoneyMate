@@ -7,6 +7,7 @@ import AccountsPage from '@/pages/AccountsPage';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import FixedDepositPage from '@/pages/FixedDepositPage';
 import OpenFixedDepositPage from '@/pages/OpenFixedDepositPage';
+import FundTransferPage from '@/pages/FundTransferPage'; 
 const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -27,6 +28,7 @@ const Home = () => {
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="fixed-deposit" element={<FixedDepositPage />} />
             <Route path="fixed-deposit/new" element={<OpenFixedDepositPage />} />
+            <Route path="transfer" element={<FundTransferPage />} />
             {/* You can add routes for other pages here */}
             {/* e.g., <Route path="transfer" element={<TransferPage />} /> */}
           </Routes>

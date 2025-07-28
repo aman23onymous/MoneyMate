@@ -41,6 +41,11 @@ export const createAccount = (accountData) => API.post('/api/account/create', ac
 export const getFixedDeposits = () => API.get('/api/account/fd');
 
 export const createFixedDeposit = (fdData) => API.post('/api/account/fd/create', fdData);
+
+export const initiateTransfer = (transferData) => API.post('/api/transaction/initiate', transferData);
+
+export const verifyTransfer = (verificationData) => API.post('/api/transaction/verify-otp', verificationData);
+
 // You can add other API calls for your application here
 // export const fetchPosts = () => API.get('/posts');
 // export const createPost = (newPost) => API.post('/posts', newPost);

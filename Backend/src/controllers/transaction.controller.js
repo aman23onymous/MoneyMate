@@ -143,24 +143,28 @@ export const verifyTransfer = async (req, res) => {
     await receiverAcc.save();
 
     // ✅ safely update both fields
-    await Transaction.findByIdAndUpdate(
+    const updatedTxn = await Transaction.findByIdAndUpdate(
       transactionId,
       {
         status: "success",
-        otp: undefined, // or leave it as-is
+        otp: undefined,
       },
-      { new: true }
+      { new: true } // `new: true` ensures the updated document is returned
     );
 
     res
       .status(200)
-      .json({ message: "Transaction successful", transaction: txn });
+      // 2. Return the `updatedTxn` object, which now has status: "success".
+      .json({ message: "Transaction successful", transaction: updatedTxn });
+    // ----------------------
+
   } catch (error) {
     res
       .status(500)
       .json({ message: "Failed to verify transaction", error: error.message });
   }
 };
+
 
 export const getTransactionHistory = async (req, res) => {
   try {
