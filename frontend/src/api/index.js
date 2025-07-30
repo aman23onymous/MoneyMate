@@ -46,6 +46,8 @@ export const initiateTransfer = (transferData) => API.post('/api/transaction/ini
 
 export const verifyTransfer = (verificationData) => API.post('/api/transaction/verify-otp', verificationData);
 
+export const getTransactionHistory = () => API.get('/api/transaction/history');
+
 // You can add other API calls for your application here
 // export const fetchPosts = () => API.get('/posts');
 // export const createPost = (newPost) => API.post('/posts', newPost);
