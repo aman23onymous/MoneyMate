@@ -5,11 +5,14 @@ import authReducer from '../features/auth/authSlice';
 import  accountsReducer from '../features/accounts/accountsSlice';
 import fixedDepositReducer from '../features/fixedDeposits/fixedDepositSlice';
 import transferReducer from '../features/transfer/transferSlice'; 
+import transactionReducer from '../features/transactions/transactionSlice';
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     accounts: accountsReducer,
     fixedDeposits: fixedDepositReducer,
     transfer: transferReducer,
+    transactions: transactionReducer,
   },
 });
