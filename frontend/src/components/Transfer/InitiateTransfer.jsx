@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAccounts } from '../../features/accounts/accountsSlice';
-import { initiateTransfer, clearTransferState } from '../../features/transfer/transferSlice';
+import { initiateTransfer } from '../../features/transfer/transferSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
@@ -20,7 +20,6 @@ const InitiateTransfer = ({ onInitiate }) => {
 
   useEffect(() => {
     dispatch(getAccounts());
-    dispatch(clearTransferState());
   }, [dispatch]);
   
   useEffect(() => {
