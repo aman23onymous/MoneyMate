@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux'; // 1. Import useDispatch
 import { clearTransferState } from '../features/transfer/transferSlice';
 import InitiateTransfer from '../components/Transfer/InitiateTransfer';
@@ -10,6 +10,16 @@ const FundTransferPage = () => {
   const dispatch = useDispatch(); 
   // This state will now hold the full object: { success, details }
   const [transactionResult, setTransactionResult] = useState(null);
+
+  useEffect(() => {
+    // Clear state when the page loads to prevent showing stale data.
+    dispatch(clearTransferState());
+
+    // Return a cleanup function to clear state when the user navigates away.
+    return () => {
+      dispatch(clearTransferState());
+    };
+  }, [dispatch]);
 
   const handleInitiate = (details) => {
     setTransactionResult(details);
