@@ -29,7 +29,7 @@ const transactionSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["UPI", "NEFT", "IMPS","RTGS"],
+      enum: ["UPI", "NEFT", "IMPS", "RTGS", "auto debit"],
       default: "IMPS"
     },
     description: {

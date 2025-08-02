@@ -1,70 +1,64 @@
 import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { getTransactions } from '@/features/transactions/transactionSlice';
-import { Link } from 'react-router-dom';
-import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
-import Card from './Card';
+import { useDispatch, useSelector } from 'react-redux';
+import { getTransactions } from '../../features/transactions/transactionSlice';
+import { Banknote, Landmark, Smartphone, PiggyBank } from 'lucide-react';
 
 const TransactionHistoryCard = () => {
     const dispatch = useDispatch();
-    const { user } = useSelector((state) => state.auth);
-    const { accounts } = useSelector((state) => state.accounts);
     const { transactions, isLoading } = useSelector((state) => state.transactions);
 
     useEffect(() => {
-        // Fetch transactions when the component loads if a user is logged in
-        if (user) {
-            dispatch(getTransactions());
+        dispatch(getTransactions());
+    }, [dispatch]);
+
+    const getTransactionIcon = (category) => {
+        switch (category) {
+            case 'UPI':
+                return <Smartphone className="w-6 h-6 text-purple-600" />;
+            case 'IMPS':
+            case 'NEFT':
+            case 'RTGS':
+                return <Landmark className="w-6 h-6 text-green-600" />;
+            case 'auto debit':
+                return <PiggyBank className="w-6 h-6 text-pink-600" />;
+            default:
+                return <Banknote className="w-6 h-6 text-gray-500" />;
         }
-    }, [user, dispatch]);
+    };
 
-    // Memoize the user's account numbers to avoid recalculating on every render
-    const userAccountNumbers = React.useMemo(() => accounts.map(acc => acc.accountNumber), [accounts]);
-
-    const recentTransactions = transactions.slice(0, 5);
+    const recentTransactions = transactions.slice(0, 4);
 
     return (
-        <Card>
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg">Transaction History</h3>
-                <Link to="/transactions" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
-                    View All
-                </Link>
-            </div>
-            <div className="space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 h-full flex flex-col hover:shadow-lg transition-shadow duration-300 cursor-pointer">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Transaction History</h3>
+            <div className="flex-grow space-y-4">
                 {isLoading ? (
                     <p className="text-gray-500">Loading transactions...</p>
                 ) : recentTransactions.length > 0 ? (
-                    recentTransactions.map((tx) => {
-                        const isCredit = userAccountNumbers.includes(tx.toAccount.accountNumber);
-                        return (
-                            <div key={tx._id} className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                    <div className={`p-2 rounded-full ${isCredit ? 'bg-green-100' : 'bg-red-100'}`}>
-                                        {isCredit ? (
-                                            <ArrowDownLeft className="h-5 w-5 text-green-600" />
-                                        ) : (
-                                            <ArrowUpRight className="h-5 w-5 text-red-600" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-sm text-gray-800">
-                                            {isCredit ? `From: ${tx.fromAccount.accountNumber}` : `To: ${tx.toAccount.accountNumber}`}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{tx.description || 'Transfer'}</p>
-                                    </div>
-                                </div>
-                                <p className={`font-bold text-sm ${isCredit ? 'text-green-600' : 'text-red-600'}`}>
-                                    {isCredit ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                    recentTransactions.map((tx) => (
+                        <div key={tx._id} className="flex items-center space-x-4">
+                            <div className="p-2 bg-gray-100 rounded-full">
+                                {getTransactionIcon(tx.category)}
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-semibold text-gray-800">{tx.description || 'Transfer'}</p>
+                                <p className="text-sm text-gray-500">
+                                    {new Date(tx.timestamp).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
                                 </p>
                             </div>
-                        );
-                    })
+                            <div className="text-right">
+                                <p className={`font-bold ${tx.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {tx.type === 'deposit' ? '+' : '-'}₹{tx.amount.toLocaleString('en-IN')}
+                                </p>
+                                <p className="text-xs text-gray-400">{tx.category}</p>
+                            </div>
+                        </div>
+                    ))
                 ) : (
-                    <p className="text-center text-gray-500 pt-4">No recent transactions found.</p>
+                    <p className="text-gray-500">No recent transactions found.</p>
                 )}
             </div>
-        </Card>
+        </div>
     );
 };
 

@@ -18,10 +18,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/payment",paymentRoute);
-app.use("/api/account", accountRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/transaction", transactionRoutes);
-app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/v1/account", accountRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/transaction", transactionRoutes);
+app.use("/api/v1/chatbot", chatbotRoutes);
 app.listen(PORT, () => {
   console.log(`✅ App listening at: http://localhost:${PORT}`)
   connectDB();
