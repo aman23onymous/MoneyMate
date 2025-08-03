@@ -274,3 +274,67 @@ export const finalizePendingTransaction = async (req, res) => {
     res.status(500).json({ message: "Failed to verify transaction", error: err.message });
   }
 };
+export const getReportData = async (req, res) => {
+  try {
+    const userAccounts = await Account.find({ user: req.userId });
+    const accountIds = userAccounts.map(acc => acc._id);
+
+    const transactions = await Transaction.find({
+      status: "success",
+      $or: [
+        { fromAccount: { $in: accountIds } },
+        { toAccount: { $in: accountIds } }
+      ]
+    });
+
+    // 1. Spending by Category (existing logic is fine)
+    const spendingByCategory = transactions
+      .filter(tx => accountIds.some(id => id.equals(tx.fromAccount)))
+      .reduce((acc, tx) => {
+        const category = tx.category || 'Other';
+        acc[category] = (acc[category] || 0) + tx.amount;
+        return acc;
+      }, {});
+      
+    const categoryData = Object.keys(spendingByCategory).map(name => ({
+        name,
+        value: spendingByCategory[name]
+    }));
+
+    // 2. Spending History (New Logic)
+    const spendingHistory = {};
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+
+    for (let i = 0; i < 6; i++) {
+        const date = new Date(sixMonthsAgo);
+        date.setMonth(date.getMonth() + i);
+        const monthName = date.toLocaleString('default', { month: 'short' });
+        spendingHistory[monthName] = { spending: 0 };
+    }
+
+    transactions.forEach(tx => {
+        // Check if it's a debit (money going out)
+        if (accountIds.some(id => id.equals(tx.fromAccount))) {
+            const monthName = new Date(tx.timestamp).toLocaleString('default', { month: 'short' });
+            if (spendingHistory[monthName]) {
+                spendingHistory[monthName].spending += tx.amount;
+            }
+        }
+    });
+
+    const spendingHistoryData = Object.keys(spendingHistory).map(name => ({
+        name,
+        spending: spendingHistory[name].spending
+    }));
+
+    res.status(200).json({
+      categoryData,
+      spendingHistoryData // Changed from balanceHistoryData
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch report data", error: error.message });
+  }
+};
