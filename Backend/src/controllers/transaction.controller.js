@@ -2,6 +2,7 @@ import Transaction from "../models/transaction.model.js";
 import Account from "../models/account.model.js";
 import User from "../models/user.model.js";
 import { sendEmail } from "../lib/sendEmail.js";
+import mongoose from "mongoose";
 
 // Generate 6-digit OTP
 const generateOTP = () =>
@@ -41,7 +42,7 @@ export const initiateTransfer = async (req, res) => {
 
     let senderAcc, receiverAcc;
 
-    if (fromAccountNumber) {
+    if(fromAccountNumber) {
       senderAcc = await Account.findOne({
         accountNumber: fromAccountNumber,
         user: req.userId
@@ -104,67 +105,77 @@ export const initiateTransfer = async (req, res) => {
 // 2️⃣ VERIFY OTP AND COMPLETE TRANSFER
 export const verifyTransfer = async (req, res) => {
   console.log("🔁 verify Transfer called");
+  
+  // 1. Start a Mongoose Session
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { transactionId, otp } = req.body;
 
-    const txn = await Transaction.findById(transactionId);
-    if (!txn) return res.status(404).json({ message: "Transaction not found" });
+    const txn = await Transaction.findById(transactionId).session(session);
+    if (!txn) throw new Error("Transaction not found");
 
     if (txn.status !== "pending") {
-      return res
-        .status(400)
-        .json({ message: "Transaction already processed or invalid" });
+      throw new Error("Transaction already processed or invalid");
     }
 
     if (txn.otp !== otp) {
-      return res.status(400).json({ message: "Incorrect OTP" });
+      throw new Error("Incorrect OTP");
     }
 
-    const senderAcc = await Account.findById(txn.fromAccount);
-    const receiverAcc = await Account.findById(txn.toAccount);
-
-    if (!senderAcc || !receiverAcc) {
-      return res.status(404).json({ message: "Accounts not found" });
-    }
-
-    if (senderAcc.balance < txn.amount) {
-      txn.status = "failed";
-      await txn.save();
-      return res
-        .status(400)
-        .json({ message: "Insufficient balance at verification" });
-    }
-
-    // Proceed with transfer
-    senderAcc.balance -= txn.amount;
-    receiverAcc.balance += txn.amount;
-
-    await senderAcc.save();
-    await receiverAcc.save();
-
-    // ✅ safely update both fields
-    const updatedTxn = await Transaction.findByIdAndUpdate(
-      transactionId,
-      {
-        status: "success",
-        otp: undefined,
-      },
-      { new: true } // `new: true` ensures the updated document is returned
+    // 2. Use atomic $inc and check balance in the query itself to prevent race conditions
+    // We only update if the balance is greater than or equal to txn.amount
+    const senderAcc = await Account.findOneAndUpdate(
+      { _id: txn.fromAccount, balance: { $gte: txn.amount } },
+      { $inc: { balance: -txn.amount } },
+      { new: true, session }
     );
 
-    res
-      .status(200)
-      // 2. Return the `updatedTxn` object, which now has status: "success".
-      .json({ message: "Transaction successful", transaction: updatedTxn });
-    // ----------------------
+    if (!senderAcc) {
+      // This throws if account doesn't exist OR balance is insufficient
+      throw new Error("Sender account not found or insufficient balance");
+    }
+
+    const receiverAcc = await Account.findByIdAndUpdate(
+      txn.toAccount,
+      { $inc: { balance: txn.amount } },
+      { new: true, session }
+    );
+
+    if (!receiverAcc) {
+      throw new Error("Receiver account not found");
+    }
+
+    // 3. Update the transaction status
+    const updatedTxn = await Transaction.findByIdAndUpdate(
+      transactionId,
+      { status: "success", $unset: { otp: 1 } },
+      { new: true, session }
+    );
+
+    // 4. Commit the transaction (All or Nothing)
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ 
+      message: "Transaction successful", 
+      transaction: updatedTxn 
+    });
 
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Failed to verify transaction", error: error.message });
+    // 5. If ANYTHING fails, abort the transaction and roll back all changes
+    await session.abortTransaction();
+    session.endSession();
+    
+    // Check if we need to update the txn status to failed (optional, requires a separate operation outside this aborted session)
+    
+    res.status(400).json({ 
+      message: "Failed to verify transaction", 
+      error: error.message 
+    });
   }
 };
-
 
 export const getTransactionHistory = async (req, res) => {
   try {
